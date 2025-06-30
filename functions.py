@@ -251,13 +251,14 @@ class Algoritem:
         for i in range(10):
             #print(f"\n=== Iteration {i+1} ===")
             #print(f"Facts BEFORE: {list(s.facts)}")
-            mcts = MCTS(self.similarity, 10, t, s, 10)
+            mcts = MCTS(self.similarity, 10, t, s, 100)
             s_new = mcts.play()
             #print(f"Facts AFTER: {list(s_new.facts)}")
             changed = s_new.facts != s.facts
             #print("State changed?" , changed)
             s = s_new
             t *= 0.95
+            print(self.similarity(s))
         return s
     
     #  def run(self):
