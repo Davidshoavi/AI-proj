@@ -234,9 +234,13 @@ class Algoritem:
 
     def get_distance_func(self):
         def similarity(state):
+            fact_strs = {
+                f"{f[0]}({','.join(f[1:])})"  
+                for f in state.facts
+            }
             distance = 0.0
             for pred_str, prob in self.vector.items():
-                truth_value = 1.0 if pred_str in state.facts else 0.0
+                truth_value = 1.0 if pred_str in fact_strs else 0.0
                 distance += abs(truth_value - prob)
             return distance
         return similarity
