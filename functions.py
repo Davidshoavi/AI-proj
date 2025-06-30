@@ -130,9 +130,9 @@ class PDDLState:
     def normalize(self,atom):
         # e.g. "(on-table milk wood)" → ["on-table","milk","wood"]
         if hasattr(atom, 'predicate') and hasattr(atom, 'args'):
-            return (atom.predicate, ) + tuple(atom.args)
+            return (atom.predicate ) + tuple(atom.args)
         # גיבוי: מחרוזת בלי גרשיים
-        text = str(atom).strip("()").replace("'", "")
+        text = str(atom).strip("()").replace("'", "").replace(",","")
         return tuple(text.split())
 
     def applicable_actions(self):
@@ -157,10 +157,10 @@ class PDDLState:
         eff_pos = action.effect_pos
         eff_neg = action.effect_neg
 
-        for atom in action.effect_neg:
+        for atom in eff_neg:
             new_facts.discard(self.normalize(atom))
 
-        for atom in action.effect_pos:
+        for atom in eff_pos:
             new_facts.add(self.normalize(atom))
 
         new_state = PDDLState(
