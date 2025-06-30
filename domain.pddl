@@ -8,7 +8,7 @@
 
   (:action pick-up
 	     :parameters (?i - item ?t - table)
-	     :precondition (and (on-table ?i ?t)(robot-gripper-empty))
+	     :precondition (and (on-table ?i ?t) (robot-gripper-empty))
 	     :effect
 	     (and (not (on-table ?i ?t))
 		   (not (robot-gripper-empty))

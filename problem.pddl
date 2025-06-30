@@ -9,7 +9,6 @@
     (:init
 
         (robot-gripper-empty)
-
         (on-table milk-carton wood-table)
         (on-table lemon wood-table)
         (on-table green-bottle black-table)

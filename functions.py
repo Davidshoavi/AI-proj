@@ -33,6 +33,7 @@ class MCTS:
             # 3. Simulation
             result = self.make_simulation(node)
             if self.similarity(result) < self.similarity(min_node):
+
                 min_node = result
 
             # 4. Backpropagation
@@ -113,7 +114,7 @@ class PDDLState:
         if facts_override is not None:
             self.facts = set(facts_override)
         else:
-            self.facts = set(self.dp.initialstate())
+            self.facts = { self.normalize(atom) for atom in self.dp.initialstate() }
 
         self.children = []
         self.parent = parent
@@ -126,17 +127,28 @@ class PDDLState:
         if len(self._applicable_actions) == 0:
             self.fully_expanded = True
 
+    def normalize(self,atom):
+        # e.g. "(on-table milk wood)" → ["on-table","milk","wood"]
+        if hasattr(atom, 'predicate') and hasattr(atom, 'args'):
+            return (atom.predicate, ) + tuple(atom.args)
+        # גיבוי: מחרוזת בלי גרשיים
+        text = str(atom).strip("()").replace("'", "")
+        return tuple(text.split())
 
     def applicable_actions(self):
-        applicable = []
-        for action_name in self.dp.operators():
-            for grounded_op in self.dp.ground_operator(action_name):
-                pre_pos = grounded_op.precondition_pos
-                pre_neg = grounded_op.precondition_neg
-                if all(p in self.facts for p in pre_pos) and all(n not in self.facts for n in pre_neg):
-                    applicable.append(grounded_op)
-        return applicable
+        init_facts = set(self.facts)
 
+        possible = []
+        for name in self.dp.operators():                     # <-- self.dp
+            for op in self.dp.ground_operator(name):         # <-- self.dp
+                pos = { self.normalize(p) for p in op.precondition_pos }
+                neg = { self.normalize(n) for n in op.precondition_neg }
+
+                # now pos ≤ init_facts really checks YOUR state
+                if pos <= init_facts and not (neg & init_facts):
+                    possible.append(op)
+        return possible
+    
     def size(self):
         return len(self.facts)
 
@@ -145,10 +157,11 @@ class PDDLState:
         eff_pos = action.effect_pos
         eff_neg = action.effect_neg
 
-        for fact in eff_neg:
-            new_facts.discard(fact)
-        for fact in eff_pos:
-            new_facts.add(fact)
+        for atom in action.effect_neg:
+            new_facts.discard(self.normalize(atom))
+
+        for atom in action.effect_pos:
+            new_facts.add(self.normalize(atom))
 
         new_state = PDDLState(
             domain_file=None,
@@ -165,7 +178,6 @@ class PDDLState:
     def expand_next_child(self):
         if self.fully_expanded:
             return None
-        print (len(self._applicable_actions))
         next_action = self._applicable_actions[len(self.children)]
         return self.apply_action(next_action)
 
@@ -233,15 +245,29 @@ class Algoritem:
         t = 1
         s = self.s_init
         for i in range(10):
-            if s is None:
-                print("None")
-            else:
-                print("no None")
-            mcts = MCTS(self.similarity, 100, t, s, 100)
-            s = mcts.play()
+            #print(f"\n=== Iteration {i+1} ===")
+            #print(f"Facts BEFORE: {list(s.facts)}")
+            mcts = MCTS(self.similarity, 10, t, s, 10)
+            s_new = mcts.play()
+            #print(f"Facts AFTER: {list(s_new.facts)}")
+            changed = s_new.facts != s.facts
+            #print("State changed?" , changed)
+            s = s_new
             t *= 0.95
         return s
-
+    
+    #  def run(self):
+    #     t = 1
+    #     s = self.s_init
+    #     for i in range(10):
+    #         if s is None:
+    #             print("None")
+    #         else:
+    #             print("no None")
+    #         mcts = MCTS(self.similarity, 100, t, s, 100)
+    #         s = mcts.play()
+    #         t *= 0.95
+    #     return s
 
 
 if __name__ == "__main__":
