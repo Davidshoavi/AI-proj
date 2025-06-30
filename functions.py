@@ -212,15 +212,6 @@ class PDDLState:
         for pred in self.facts:
             lines.append(f"  {pred}")
 
-        # חשב מרחק באמצעות פונקציית distance_func
-        try:
-            if not hasattr(self, "distance_func") or self.distance_func is None:
-                raise RuntimeError("No distance function provided")
-            distance = self.distance_func(self)
-            lines.append(f"Distance from probability vector: {distance}")
-        except Exception:
-            lines.append("Distance: unavailable (no distance function)")
-
         return "\n".join(lines)
 
 
