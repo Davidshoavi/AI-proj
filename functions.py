@@ -6,16 +6,17 @@ import math
 
 
 class MCTS:
-    def __init__(self, similarity, pddl_domain, pddl_problem, step_limit, T, starting_state, rounds):
+    def __init__(self, similarity, step_limit, T, starting_state, rounds):
         self.similarity = similarity
-        self.pddl_domain = pddl_domain
-        self.pddl_problem  = pddl_problem
+
         self.step_limit = step_limit
         self.T = T
         self.starting_state = starting_state
         self.rounds = rounds
 
     def play(self):
+        min_node = self.starting_state
+
         for _ in range(self.rounds):
             # 1. Selection
             node = self.starting_state
@@ -31,9 +32,13 @@ class MCTS:
 
             # 3. Simulation
             result = self.make_simulation(node)
+            if self.similarity(result) < self.similarity(min_node):
+                min_node = result
 
             # 4. Backpropagation
             self.backpropagation(result, node)
+        
+        return min_node
 
     def probabilistic_choice(self, delta):
         probability = math.exp(-delta / self.T)
@@ -84,14 +89,8 @@ def get_probabilities():  # improve
     return probabilities
 
 
-def get_PDDL():
-    # sys.argv[1], sys.argv[2]
-    # return DomainProblem(domain_file, problem_file)
-    pass
-
-
-
-
+def get_PDDL(domain_file, problem_file):
+    return DomainProblem(domain_file, problem_file)
 
 
 class PDDLState:
@@ -124,12 +123,16 @@ class PDDLState:
         self._applicable_actions = self.applicable_actions()
         self.num_applicable_actions = len(self._applicable_actions)
         self.fully_expanded = False
+        if len(self._applicable_actions) == 0:
+            self.fully_expanded = True
+
 
     def applicable_actions(self):
         applicable = []
         for action_name in self.dp.operators():
             for grounded_op in self.dp.ground_operator(action_name):
-                pre_pos, pre_neg = grounded_op.precond
+                pre_pos = grounded_op.precondition_pos
+                pre_neg = grounded_op.precondition_neg
                 if all(p in self.facts for p in pre_pos) and all(n not in self.facts for n in pre_neg):
                     applicable.append(grounded_op)
         return applicable
@@ -139,7 +142,8 @@ class PDDLState:
 
     def apply_action(self, action, similarity_score=0.0):
         new_facts = set(self.facts)
-        eff_pos, eff_neg = action.effect
+        eff_pos = action.effect_pos
+        eff_neg = action.effect_neg
 
         for fact in eff_neg:
             new_facts.discard(fact)
@@ -161,6 +165,7 @@ class PDDLState:
     def expand_next_child(self):
         if self.fully_expanded:
             return None
+        print (len(self._applicable_actions))
         next_action = self._applicable_actions[len(self.children)]
         return self.apply_action(next_action)
 
@@ -188,32 +193,59 @@ class PDDLState:
 
     def _update_fully_expanded(self):
         self.fully_expanded = (len(self.children) == self.num_applicable_actions)
+    
+    def __str__(self):
+        lines = []
+        lines.append("Predicates in state:")
+        for pred in self.facts:
+            lines.append(f"  {pred}")
+
+        # חשב מרחק באמצעות פונקציית distance_func
+        try:
+            if not hasattr(self, "distance_func") or self.distance_func is None:
+                raise RuntimeError("No distance function provided")
+            distance = self.distance_func(self)
+            lines.append(f"Distance from probability vector: {distance}")
+        except Exception:
+            lines.append("Distance: unavailable (no distance function)")
+
+        return "\n".join(lines)
 
 
-class Algoritem():
+class Algoritem:
     def __init__(self, probabilities, pddl, s_init):
-        pass
+        self.pddl = pddl
+        self.s_init = s_init
+        self.similarity = self.get_distance_func()
+        with open(probabilities, "r") as f:
+            self.vector = json.load(f)
 
     def get_distance_func(self):
         def similarity(state):
-            pass
+            distance = 0.0
+            for pred_str, prob in self.vector.items():
+                truth_value = 1.0 if pred_str in state.facts else 0.0
+                distance += abs(truth_value - prob)
+            return distance
         return similarity
     
-    def run():
-        pass
+    def run(self):
+        t = 1
+        s = self.s_init
+        for i in range(10):
+            if s is None:
+                print("None")
+            else:
+                print("no None")
+            mcts = MCTS(self.similarity, 100, t, s, 100)
+            s = mcts.play()
+            t *= 0.95
+        return s
 
-    def changeT():
-        pass
-
-    def do_again():
-        pass
 
 
 if __name__ == "__main__":
-
-    if len(sys.argv) != 4:
-        print("Usage: python your_program.py <domain.pddl> <problem.pddl>")
-        sys.exit(1)
-
-    probabilities = get_probabilities()
-    dp = get_PDDL()
+    dp = get_PDDL("domain.pddl", "problem.pddl")
+    s_init = PDDLState(domain_file=None, problem_file=None, dp_override=dp)
+    algo = Algoritem("vector.json", dp, s_init)
+    print (algo.run())
