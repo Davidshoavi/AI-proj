@@ -237,12 +237,12 @@ class Algoritem:
         return similarity
     
     def run(self):
-        t = 1
+        t = 0.5
         s = self.s_init
-        for i in range(30):
+        for i in range(3):
             #print(f"\n=== Iteration {i+1} ===")
             #print(f"Facts BEFORE: {list(s.facts)}")
-            mcts = MCTS(self.similarity, 100, t, s, 50)
+            mcts = MCTS(self.similarity, 10, t, s, 10)
             s_new = mcts.play()
             #print(f"Facts AFTER: {list(s_new.facts)}")
             changed = s_new.facts != s.facts
