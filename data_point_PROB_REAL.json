@@ -1,0 +1,15 @@
+{
+    "in-table-section(green-mug,blue)": 0.09073548763990402,
+    "in-table-section(green-mug,white)": 0.054600607603788376,
+    "in-table-section(red-can,blue)": 0.4746311902999878,
+    "in-table-section(red-can,white)": 0.13939636945724487,
+    "in-table-section(mineral-water-bottle,blue)": 0.6187804341316223,
+    "in-table-section(mineral-water-bottle,white)": 0.22000709176063538,
+    "in-table-section(spray-bottle,blue)": 0.5253688097000122,
+    "in-table-section(spray-bottle,white)": 0.3328523337841034,
+    "robot-gripper-empty()": 0.9485372304916382,
+    "robot-holding-in-air(green-mug)": 0.13296422362327576,
+    "robot-holding-in-air(red-can)": 0.364777535200119,
+    "robot-holding-in-air(mineral-water-bottle)": 0.5312093496322632,
+    "robot-holding-in-air(spray-bottle)": 0.47268348932266235
+}

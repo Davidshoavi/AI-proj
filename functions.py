@@ -239,17 +239,16 @@ class Algoritem:
     def run(self):
         t = 1
         s = self.s_init
-        for i in range(10):
+        for i in range(30):
             #print(f"\n=== Iteration {i+1} ===")
             #print(f"Facts BEFORE: {list(s.facts)}")
-            mcts = MCTS(self.similarity, 10, t, s, 100)
+            mcts = MCTS(self.similarity, 100, t, s, 50)
             s_new = mcts.play()
             #print(f"Facts AFTER: {list(s_new.facts)}")
             changed = s_new.facts != s.facts
             #print("State changed?" , changed)
             s = s_new
             t *= 0.95
-            print(self.similarity(s))
         return s
     
     #  def run(self):
@@ -266,8 +265,8 @@ class Algoritem:
     #     return s
 
 
-if __name__ == "__main__":
-    dp = get_PDDL("domain.pddl", "problem.pddl")
-    s_init = PDDLState(domain_file=None, problem_file=None, dp_override=dp)
-    algo = Algoritem("vector.json", dp, s_init)
-    print (algo.run())
+# if __name__ == "__main__":
+#     dp = get_PDDL("domain.pddl", "problem.pddl")
+#     s_init = PDDLState(domain_file=None, problem_file=None, dp_override=dp)
+#     algo = Algoritem("vector.json", dp, s_init)
+#     print (algo.run())
